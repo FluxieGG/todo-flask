@@ -1,5 +1,5 @@
 from app import app
-from flask import render_template
+from flask import render_template, request, url_for, redirect
 
 todos = [
     {
@@ -40,3 +40,15 @@ def task(task_id):
 @app.route('/new-task')
 def new_task():
     return render_template('new_task.html')
+
+@app.route('/edit-task/<int:task_id>', methods=["GET", "POST"])
+def edit_task(task_id):
+    index = task_id - 1
+    task = todos[index]    
+    if request.method == "POST":
+        title = request.form.get("title")
+        description = request.form.get("description")
+        todos[index]["title"] = title
+        todos[index]["description"] = description 
+        return redirect(url_for("task", task_id=task_id))       
+    return render_template('task_form.html', task=task)
