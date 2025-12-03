@@ -1,5 +1,6 @@
 from app import app
-from flask import render_template, request, url_for, redirect
+from flask import render_template, request, redirect, url_for
+from datetime import datetime
 
 todos = [
     {
@@ -22,26 +23,27 @@ todos = [
     }
 ]
 
-@app.route('/') # www.domain.com
+
+
+@app.route("/")
 def index():
     todo_count = len(todos)
-    return render_template('index.html', count=todo_count)
+    return render_template("index.html", todo_count=todo_count)
 
-@app.route('/tasks') # www.domain.com/tasks
-def all_tasks():
-    return render_template('tasks.html', todos=todos)    
 
-@app.route('/task/<int:task_id>') # www.domain.com/task/1
+@app.route("/tasks")
+def all_tasks():    
+    return render_template("tasks.html", todos=todos)
+
+
+@app.route("/task/<int:task_id>")
 def task(task_id):
-    task = todos[task_id - 1]
-    return render_template('task.html', task=task)
+    index = task_id - 1
+    task = todos[index]
+    return render_template("task.html", task=task)    
 
-# www.domain.com/new-task
-@app.route('/new-task')
-def new_task():
-    return render_template('new_task.html')
 
-@app.route('/edit-task/<int:task_id>', methods=["GET", "POST"])
+@app.route("/edit-task/<int:task_id>", methods=["GET", "POST"])
 def edit_task(task_id):
     index = task_id - 1
     task = todos[index]    
@@ -49,6 +51,29 @@ def edit_task(task_id):
         title = request.form.get("title")
         description = request.form.get("description")
         todos[index]["title"] = title
-        todos[index]["description"] = description 
-        return redirect(url_for("task", task_id=task_id))       
-    return render_template('task_form.html', task=task)
+        todos[index]["description"] = description
+        return redirect(url_for("task", task_id=task_id))
+    
+    return render_template("task_form.html", task=task)
+
+
+@app.route("/new-task", methods=["GET", "POST"])
+def create_task():    
+    if request.method == "POST":
+        task_id = todos[-1]["id"] + 1
+        title = request.form.get("title")
+        description = request.form.get("description")
+        todos.append({
+         "id": task_id,
+         "title": title,
+         "description": description ,
+         "created_at": datetime.now()
+        })
+        return redirect(url_for("task", task_id=task_id))    
+    return render_template("task_form.html", task=None)
+
+@app.route("/delete-task/<int:task_id>", methods=["POST"])
+def delete_task(task_id):
+    global todos
+    todos = [todo for todo in todos if todo["id"] != task_id ]
+    return redirect(url_for("all_tasks"))
