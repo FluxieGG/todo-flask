@@ -8,60 +8,39 @@ import sqlalchemy as sa
 import sqlalchemy.orm as so
 from urllib.parse import urlsplit
 
-todos = [
-    {
-        "id": 1,
-        "title": "Set up Flask Project Structure",
-        "description": "Create the Flask application, configure routes, and establish the basic folder structure for templates, static files, and modules.",
-        "created_at": "2025-12-01 09:42:17",
-    },
-    {
-        "id": 2,
-        "title": "Design Blog Post Model",
-        "description": "Define the database schema for blog posts, including title, content, author, and timestamp fields, using SQLAlchemy or an equivalent ORM.",
-        "created_at": "2025-12-03 15:26:49",
-    },
-    {
-        "id": 3,
-        "title": "Implement Post Creation Form",
-        "description": "Add a form using Flask-WTF to allow users to create new blog posts, validate inputs, and store entries in the database.",
-        "created_at": "2025-11-30 11:58:05",
-    }
-]
-
-
 
 @app.route("/")
 @login_required
 def index():
-    todo_count = len(todos)
+    # todo_count = len(todos)
+    todo_count = Todo.query.count()
     return render_template("index.html", todo_count=todo_count)
 
 
 @app.route("/tasks")
 @login_required
-def all_tasks():    
+def all_tasks():   
+    todos = Todo.query.all() 
     return render_template("tasks.html", todos=todos)
 
 
 @app.route("/task/<int:task_id>")
 @login_required
 def task(task_id):
-    index = task_id - 1
-    task = todos[index]
+    task = Todo.query.get_or_404(task_id)
     return render_template("task.html", task=task)    
 
 
 @app.route("/edit-task/<int:task_id>", methods=["GET", "POST"])
 @login_required
 def edit_task(task_id):
-    index = task_id - 1
-    task = todos[index]    
+    task = Todo.query.get_or_404(task_id)  
     if request.method == "POST":
         title = request.form.get("title")
         description = request.form.get("description")
-        todos[index]["title"] = title
-        todos[index]["description"] = description
+        task.title = title
+        task.description = description
+        db.session.commit()
         return redirect(url_for("task", task_id=task_id))
     
     return render_template("task_form.html", task=task)
@@ -70,24 +49,25 @@ def edit_task(task_id):
 @app.route("/new-task", methods=["GET", "POST"])
 @login_required
 def create_task():    
-    if request.method == "POST":
-        task_id = todos[-1]["id"] + 1
+    if request.method == "POST":        
         title = request.form.get("title")
         description = request.form.get("description")
-        todos.append({
-         "id": task_id,
-         "title": title,
-         "description": description ,
-         "created_at": datetime.now()
-        })
-        return redirect(url_for("task", task_id=task_id))    
+        task = Todo(
+            title=title,
+            description=description,
+            user=current_user
+        )
+        db.session.add(task)
+        db.session.commit()
+        return redirect(url_for("task", task_id=task.id))    
     return render_template("task_form.html", task=None)
 
 @app.route("/delete-task/<int:task_id>", methods=["POST"])
 @login_required
 def delete_task(task_id):
-    global todos
-    todos = [todo for todo in todos if todo["id"] != task_id ]
+    task = Todo.query.get_or_404(task_id)  
+    db.session.delete(task)
+    db.session.commit()
     return redirect(url_for("all_tasks"))
 
 @app.route('/login', methods=["GET", "POST"])
