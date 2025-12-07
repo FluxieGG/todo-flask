@@ -13,7 +13,11 @@ migrate = Migrate(app, db)
 login = LoginManager(app)
 login.login_view = 'login'
 
-import routes
-
+if __name__ == '__main__':
+    with app.app_context():
+        from routes import *
+        app.run(debug=True)
+else:
+    from routes import *
 
 

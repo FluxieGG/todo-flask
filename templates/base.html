@@ -1,30 +1,68 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
+  <head>
     <title>Todo Home</title>
-    <link href="{{ url_for('static', filename='css/style.css') }}" rel="stylesheet">    
-</head>
-<body>
-  <nav>
-    <h1>Example Task List App</h1>
-    <ul>
-      <li class="navlink"><a href="{{ url_for('index') }}">Home</a></li>
-      <li class="navlink"><a href="{{ url_for('all_tasks') }}">View Tasks</a></li>
-      <li class="navlink"><a href="{{ url_for('create_task') }}">New Task</a></li>
-    </ul>
-  </nav>
-  <main>
-    {% with messages = get_flashed_messages() %}
-      {% if messages %}
+    <link
+      href="{{ url_for('static', filename='css/style.css') }}"
+      rel="stylesheet"
+    />
+  </head>
+  <body>
+    <nav>
+      <h1>Example Task List App</h1>
+      <ul>
+        <li class="navlink"><a href="{{ url_for('index') }}">Home</a></li>
+        <li class="navlink">
+          <a href="{{ url_for('all_tasks') }}">View Tasks</a>
+        </li>
+        <li class="navlink">
+          <a href="{{ url_for('create_task') }}">New Task</a>
+        </li>
+      </ul>
+    </nav>
+
+    <!-- Dark mode toggle switch -->
+    <div class="theme-toggle-container">
+      <label class="theme-toggle-label">🌙</label>
+      <label class="switch">
+        <input type="checkbox" id="themeToggle" />
+        <span class="slider"></span>
+      </label>
+    </div>
+
+    <main>
+      {% with messages = get_flashed_messages() %} {% if messages %}
       <ul>
         {% for message in messages %}
         <li>{{ message }}</li>
         {% endfor %}
       </ul>
-    {% endif %}
-    {% endwith %}
-    {% block main %}
-    {% endblock %}
-  </main>
-</body>
+      {% endif %} {% endwith %} {% block main %} {% endblock %}
+    </main>
+
+    <script>
+      // Dark mode toggle functionality
+      const themeToggle = document.getElementById("themeToggle");
+      const htmlElement = document.documentElement;
+      const body = document.body;
+
+      // Load saved theme preference from localStorage
+      const savedTheme = localStorage.getItem("theme");
+      if (savedTheme === "dark") {
+        body.classList.add("dark-mode");
+        themeToggle.checked = true;
+      }
+
+      // Toggle dark mode on switch change
+      themeToggle.addEventListener("change", () => {
+        if (themeToggle.checked) {
+          body.classList.add("dark-mode");
+          localStorage.setItem("theme", "dark");
+        } else {
+          body.classList.remove("dark-mode");
+          localStorage.setItem("theme", "light");
+        }
+      });
+    </script>
+  </body>
 </html>
